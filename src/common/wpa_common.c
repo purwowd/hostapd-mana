@@ -144,7 +144,6 @@ int wpa_pmk_to_ptk(const u8 *pmk, size_t pmk_len, const char *label,
 		   struct wpa_ptk *ptk, int akmp, int cipher)
 {
     // PATCH: BYPASS PTK GENERATION, USE DUMMY VALUE
-    size_t ptk_len;
     ptk->kck_len = wpa_kck_len(akmp);
     ptk->kek_len = wpa_kek_len(akmp);
     ptk->tk_len = wpa_cipher_key_len(cipher);
