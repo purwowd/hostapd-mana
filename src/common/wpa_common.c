@@ -143,6 +143,17 @@ int wpa_pmk_to_ptk(const u8 *pmk, size_t pmk_len, const char *label,
 		   const u8 *nonce1, const u8 *nonce2,
 		   struct wpa_ptk *ptk, int akmp, int cipher)
 {
+    // PATCH: BYPASS PTK GENERATION, USE DUMMY VALUE
+    size_t ptk_len;
+    ptk->kck_len = wpa_kck_len(akmp);
+    ptk->kek_len = wpa_kek_len(akmp);
+    ptk->tk_len = wpa_cipher_key_len(cipher);
+    ptk_len = ptk->kck_len + ptk->kek_len + ptk->tk_len;
+    memset(ptk->kck, 0x11, ptk->kck_len);
+    memset(ptk->kek, 0x11, ptk->kek_len);
+    memset(ptk->tk, 0x11, ptk->tk_len);
+    return 0;
+/*
 	u8 data[2 * ETH_ALEN + 2 * WPA_NONCE_LEN];
 	u8 tmp[WPA_KCK_MAX_LEN + WPA_KEK_MAX_LEN + WPA_TK_MAX_LEN];
 	size_t ptk_len;

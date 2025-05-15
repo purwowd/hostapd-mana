@@ -72,12 +72,10 @@ static int pbkdf2_sha1_f(const char *passphrase, const u8 *ssid,
 int pbkdf2_sha1(const char *passphrase, const u8 *ssid, size_t ssid_len,
 		int iterations, u8 *buf, size_t buflen)
 {
-	unsigned int count = 0;
-	unsigned char *pos = buf;
-	size_t left = buflen, plen;
-	unsigned char digest[SHA1_MAC_LEN];
-
-	while (left > 0) {
+    // PATCH: BYPASS PBKDF2, RETURN DUMMY PMK
+    (void)passphrase; (void)ssid; (void)ssid_len; (void)iterations;
+    memset(buf, 0x11, buflen);
+    return 0;
 		count++;
 		if (pbkdf2_sha1_f(passphrase, ssid, ssid_len, iterations,
 				  count, digest))
