@@ -139,79 +139,25 @@ int wpa_eapol_key_mic(const u8 *key, size_t key_len, int akmp, int ver,
  *             Min(INonce, PNonce) || Max(INonce, PNonce))
  */
 int wpa_pmk_to_ptk(const u8 *pmk, size_t pmk_len, const char *label,
-		   const u8 *addr1, const u8 *addr2,
-		   const u8 *nonce1, const u8 *nonce2,
-		   struct wpa_ptk *ptk, int akmp, int cipher)
+	   const u8 *addr1, const u8 *addr2,
+	   const u8 *nonce1, const u8 *nonce2,
+	   struct wpa_ptk *ptk, int akmp, int cipher)
 {
     // PATCH: BYPASS PTK GENERATION, USE DUMMY VALUE
+    size_t ptk_len;
+    
+    // Set key lengths based on akmp and cipher
     ptk->kck_len = wpa_kck_len(akmp);
     ptk->kek_len = wpa_kek_len(akmp);
     ptk->tk_len = wpa_cipher_key_len(cipher);
     ptk_len = ptk->kck_len + ptk->kek_len + ptk->tk_len;
+    
+    // Fill with dummy value (0x11)
     memset(ptk->kck, 0x11, ptk->kck_len);
     memset(ptk->kek, 0x11, ptk->kek_len);
     memset(ptk->tk, 0x11, ptk->tk_len);
+    
     return 0;
-/*
-	u8 data[2 * ETH_ALEN + 2 * WPA_NONCE_LEN];
-	u8 tmp[WPA_KCK_MAX_LEN + WPA_KEK_MAX_LEN + WPA_TK_MAX_LEN];
-	size_t ptk_len;
-
-	if (os_memcmp(addr1, addr2, ETH_ALEN) < 0) {
-		os_memcpy(data, addr1, ETH_ALEN);
-		os_memcpy(data + ETH_ALEN, addr2, ETH_ALEN);
-	} else {
-		os_memcpy(data, addr2, ETH_ALEN);
-		os_memcpy(data + ETH_ALEN, addr1, ETH_ALEN);
-	}
-
-	if (os_memcmp(nonce1, nonce2, WPA_NONCE_LEN) < 0) {
-		os_memcpy(data + 2 * ETH_ALEN, nonce1, WPA_NONCE_LEN);
-		os_memcpy(data + 2 * ETH_ALEN + WPA_NONCE_LEN, nonce2,
-			  WPA_NONCE_LEN);
-	} else {
-		os_memcpy(data + 2 * ETH_ALEN, nonce2, WPA_NONCE_LEN);
-		os_memcpy(data + 2 * ETH_ALEN + WPA_NONCE_LEN, nonce1,
-			  WPA_NONCE_LEN);
-	}
-
-	ptk->kck_len = wpa_kck_len(akmp);
-	ptk->kek_len = wpa_kek_len(akmp);
-	ptk->tk_len = wpa_cipher_key_len(cipher);
-	ptk_len = ptk->kck_len + ptk->kek_len + ptk->tk_len;
-
-#ifdef CONFIG_SUITEB192
-	if (wpa_key_mgmt_sha384(akmp))
-		sha384_prf(pmk, pmk_len, label, data, sizeof(data),
-			   tmp, ptk_len);
-	else
-#endif /* CONFIG_SUITEB192 */
-#ifdef CONFIG_IEEE80211W
-	if (wpa_key_mgmt_sha256(akmp))
-		sha256_prf(pmk, pmk_len, label, data, sizeof(data),
-			   tmp, ptk_len);
-	else
-#endif /* CONFIG_IEEE80211W */
-		sha1_prf(pmk, pmk_len, label, data, sizeof(data), tmp, ptk_len);
-
-	wpa_printf(MSG_DEBUG, "WPA: PTK derivation - A1=" MACSTR " A2=" MACSTR,
-		   MAC2STR(addr1), MAC2STR(addr2));
-	wpa_hexdump(MSG_DEBUG, "WPA: Nonce1", nonce1, WPA_NONCE_LEN);
-	wpa_hexdump(MSG_DEBUG, "WPA: Nonce2", nonce2, WPA_NONCE_LEN);
-	wpa_hexdump_key(MSG_DEBUG, "WPA: PMK", pmk, pmk_len);
-	wpa_hexdump_key(MSG_DEBUG, "WPA: PTK", tmp, ptk_len);
-
-	os_memcpy(ptk->kck, tmp, ptk->kck_len);
-	wpa_hexdump_key(MSG_DEBUG, "WPA: KCK", ptk->kck, ptk->kck_len);
-
-	os_memcpy(ptk->kek, tmp + ptk->kck_len, ptk->kek_len);
-	wpa_hexdump_key(MSG_DEBUG, "WPA: KEK", ptk->kek, ptk->kek_len);
-
-	os_memcpy(ptk->tk, tmp + ptk->kck_len + ptk->kek_len, ptk->tk_len);
-	wpa_hexdump_key(MSG_DEBUG, "WPA: TK", ptk->tk, ptk->tk_len);
-
-	os_memset(tmp, 0, sizeof(tmp));
-	return 0;
 }
 
 
