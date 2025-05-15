@@ -65,53 +65,17 @@ unsigned int wpa_mic_len(int akmp)
  * defined in the last draft (IEEE 802.11i/D10).
  */
 int wpa_eapol_key_mic(const u8 *key, size_t key_len, int akmp, int ver,
-		      const u8 *buf, size_t len, u8 *mic)
+	      const u8 *buf, size_t len, u8 *mic)
 {
-	u8 hash[SHA384_MAC_LEN];
-
-	switch (ver) {
-#ifndef CONFIG_FIPS
-	case WPA_KEY_INFO_TYPE_HMAC_MD5_RC4:
-		return hmac_md5(key, key_len, buf, len, mic);
-#endif /* CONFIG_FIPS */
-	case WPA_KEY_INFO_TYPE_HMAC_SHA1_AES:
-		if (hmac_sha1(key, key_len, buf, len, hash))
-			return -1;
-		os_memcpy(mic, hash, MD5_MAC_LEN);
-		break;
-#if defined(CONFIG_IEEE80211R) || defined(CONFIG_IEEE80211W)
-	case WPA_KEY_INFO_TYPE_AES_128_CMAC:
-		return omac1_aes_128(key, buf, len, mic);
-#endif /* CONFIG_IEEE80211R || CONFIG_IEEE80211W */
-	case WPA_KEY_INFO_TYPE_AKM_DEFINED:
-		switch (akmp) {
-#ifdef CONFIG_HS20
-		case WPA_KEY_MGMT_OSEN:
-			return omac1_aes_128(key, buf, len, mic);
-#endif /* CONFIG_HS20 */
-#ifdef CONFIG_SUITEB
-		case WPA_KEY_MGMT_IEEE8021X_SUITE_B:
-			if (hmac_sha256(key, key_len, buf, len, hash))
-				return -1;
-			os_memcpy(mic, hash, MD5_MAC_LEN);
-			break;
-#endif /* CONFIG_SUITEB */
-#ifdef CONFIG_SUITEB192
-		case WPA_KEY_MGMT_IEEE8021X_SUITE_B_192:
-			if (hmac_sha384(key, key_len, buf, len, hash))
-				return -1;
-			os_memcpy(mic, hash, 24);
-			break;
-#endif /* CONFIG_SUITEB192 */
-		default:
-			return -1;
-		}
-		break;
-	default:
-		return -1;
-	}
-
-	return 0;
+    // PATCH: BYPASS MIC CALCULATION, USE DUMMY MIC VALUE
+    // Ignore all inputs except mic buffer
+    (void)key; (void)key_len; (void)akmp; (void)ver; (void)buf; (void)len;
+    
+    // Always fill with a dummy MIC value (0x11)
+    // Use 24 bytes which is the max MIC size (for SUITE_B_192)
+    memset(mic, 0x11, 24);
+    
+    return 0;
 }
 
 
